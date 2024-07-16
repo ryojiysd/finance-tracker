@@ -12,14 +12,14 @@
     <Trend
       color="green"
       title="Income"
-      :amount="4000"
+      :amount="incomeTotal"
       :last-amount="3000"
       :loading="isLoading"
     />
     <Trend
       color="red"
       title="Expense"
-      :amount="4000"
+      :amount="expenseTotal"
       :last-amount="5000"
       :loading="isLoading"
     />
@@ -37,6 +37,24 @@
       :last-amount="4100"
       :loading="isLoading"
     />
+  </section>
+
+  <section class="flex justify-between mb-10">
+    <div>
+      <h2 class="text-2xl font-extrabold">Transactions</h2>
+      <div class="text-gray-500 dark:text-gray-400">
+        You have {{ incomeCount }} incomes and {{ expenseCount }} expenses this
+        periodd
+      </div>
+    </div>
+    <div>
+      <UButton
+        icon="i-heroicons-plus-circle"
+        color="white"
+        variant="solid"
+        label="Add"
+      ></UButton>
+    </div>
   </section>
 
   <section v-if="!isLoading">
@@ -72,6 +90,24 @@ const selectedView = ref(transactionViewOptions[1]);
 const supabase = useSupabaseClient();
 const transactions = ref([]);
 const isLoading = ref(false);
+
+const income = computed(() =>
+  transactions.value.filter((t) => t.type === "Income")
+);
+const expense = computed(() =>
+  transactions.value.filter((t) => t.type === "Expense")
+);
+
+const incomeCount = computed(() => income.value.length);
+const expenseCount = computed(() => expense.value.length);
+
+const incomeTotal = computed(() =>
+  income.value.reduce((sum, transaction) => sum + transaction.amount, 0)
+);
+
+const expenseTotal = computed(() =>
+  expense.value.reduce((sum, transaction) => sum + transaction.amount, 0)
+);
 
 const fetchTransactions = async () => {
   isLoading.value = true;
