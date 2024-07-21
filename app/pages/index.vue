@@ -106,9 +106,12 @@ const {
 } = useFetchTransactions(current);
 
 const {
+  refresh: refreshPrevious,
   transactions: {
     incomeTotal: prevIncomeTotal,
     expenseTotal: prevExpenseTotal,
   },
 } = useFetchTransactions(previous);
+
+await Promise.all([refresh(), refreshPrevious()]);
 </script>
