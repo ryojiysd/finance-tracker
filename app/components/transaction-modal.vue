@@ -3,7 +3,7 @@
     <UCard>
       <template #header> Add Transaction </template>
 
-      <UForm :state="state" :schema="schema" ref="form" @submit.prevent="save">
+      <UForm :state="state" :schema="schema" ref="form" @submit="save">
         <UFormGroup
           :required="true"
           label="Transaction Type"
@@ -61,7 +61,13 @@
           />
         </UFormGroup>
 
-        <UButton type="submit" color="black" variant="solid" label="save" />
+        <UButton
+          type="submit"
+          color="black"
+          variant="solid"
+          label="save"
+          :loading="isLoading"
+        />
       </UForm>
     </UCard>
   </UModal>
@@ -74,7 +80,7 @@ import { z } from "zod";
 const props = defineProps({
   modelValue: Boolean,
 });
-const emit = defineEmits(["update:modelValue"]);
+const emit = defineEmits(["update:modelValue", "saved"]);
 
 const defaultSchema = z.object({
   amount: z.number().positive("Amount needs to be more than 0"),
@@ -110,11 +116,39 @@ const schema = z.intersection(
 );
 
 const form = ref();
+const isLoading = ref(false);
+const supabase = useSupabaseClient();
+const toast = useToast();
 
 const save = async () => {
   if (form.value.errors.length) return;
 
-  // Store into the supabase
+  isLoading.value = true;
+  try {
+    console.log("========= start saving =========");
+    const { error } = await supabase
+      .from("transactions")
+      .upsert({ ...state.value });
+    if (!error) {
+      toast.add({
+        title: "Transaction saved",
+        icon: "i-heroicons-check-circle",
+      });
+      isOpen.value = false;
+      emit("saved");
+      return;
+    }
+    throw error;
+  } catch (error) {
+    toast.add({
+      title: "Transaction not saved",
+      description: error.message,
+      icon: "i-heroicons-exclamation-circle",
+      color: "red",
+    });
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const initialState = {
